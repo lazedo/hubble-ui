@@ -220,6 +220,10 @@ export class ServiceCard extends AbstractCard {
   }
 
   @computed
+  public get cidrGroupIcon(): string | null {
+    return this.labelsProps.cidrGroupIcon || null;
+  }
+
   public get appName(): string {
     const appLabel = this.appLabel;
     if (appLabel != null) return appLabel;

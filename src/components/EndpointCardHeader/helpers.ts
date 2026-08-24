@@ -1,5 +1,7 @@
 import { ServiceCard } from '~/domain/service-map';
 
+import * as logos from './logos';
+
 export enum LogoType {
   PROTOCOL = 'logo',
   EMOJI = 'emoji',
@@ -14,6 +16,17 @@ export const extractLogo = (ep: ServiceCard): Logo => {
   if (ep.isCovalentRelated) {
     return {
       id: 'covalent',
+      type: LogoType.PROTOCOL,
+    };
+  }
+
+  // NOTE: A CiliumCIDRGroup may choose its icon via the `icon` label on the
+  // group (arrives as cidrgroup:icon=<key>); only keys of the bundled logo
+  // set are honoured, anything else falls through to the globe.
+  const cidrGroupIcon = ep.cidrGroupIcon;
+  if (!!cidrGroupIcon && !!(logos as any)[cidrGroupIcon]) {
+    return {
+      id: cidrGroupIcon,
       type: LogoType.PROTOCOL,
     };
   }

@@ -55,6 +55,12 @@ describe('extract app name', () => {
     appNameTest(['reserved:world', 'cidrgroup:role=klab-dns'], 'world');
   });
 
+  test('cidr group icon label', () => {
+    const labels = ['reserved:world', 'cidrgroup:icon=etcd'].map(l => Labels.toKV(l));
+    expect(Labels.findCIDRGroupIconInLabels(labels)).toBe('etcd');
+    expect(Labels.detect(labels).cidrGroupIcon).toBe('etcd');
+  });
+
   test('from k8s prefixed lbls', () => {
     appNameTest(['k8s:app=EXPECTED_NAME'], 'EXPECTED_NAME');
     appNameTest(['k8s:name=EXPECTED_NAME'], 'EXPECTED_NAME');

@@ -11,6 +11,12 @@ export const NamespaceLabelKey = 'io.kubernetes.pod.namespace';
 // deriving an app name (cilium/hubble-ui#1051).
 export const CIDRGroupNameLabelPrefix = 'cidrgroup:io.cilium.policy.cidrgroupname/';
 
+// Optional label on a CiliumCIDRGroup choosing the service-map icon for the
+// identities it covers: `icon: etcd` on the group arrives in flows as
+// `cidrgroup:icon=etcd`. The value must match a key of the bundled logo set
+// (see EndpointCardHeader/logos.ts) — unknown values fall back to the globe.
+export const CIDRGroupIconLabelKey = 'cidrgroup:icon';
+
 export interface LabelsProps {
   isHost: boolean;
   isKubeApiserver: boolean;
@@ -23,6 +29,7 @@ export interface LabelsProps {
   isIngress: boolean;
   appName?: string;
   clusterName?: string;
+  cidrGroupIcon?: string;
 }
 
 export enum ReservedLabel {
@@ -263,6 +270,15 @@ export class Labels {
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }
 
+  public static findCIDRGroupIconInLabels(labels: KV[]): string | null {
+    for (const lbl of labels) {
+      const key = lbl.key.toLowerCase().replace(/=+$/, '');
+      if (key === CIDRGroupIconLabelKey && lbl.value.length > 0) return lbl.value;
+    }
+
+    return null;
+  }
+
   public static findCIDRGroupNameInLabels(labels: KV[]): string | null {
     for (const lbl of labels) {
       const name = Labels.getCIDRGroupName(lbl);
@@ -443,6 +459,8 @@ export class Labels {
     if (props.isWorld) {
       const cidrGroupName = Labels.findCIDRGroupNameInLabels(labels);
       if (!!cidrGroupName) props.appName = cidrGroupName;
+
+      props.cidrGroupIcon = Labels.findCIDRGroupIconInLabels(labels) || void 0;
     }
 
     return props;
