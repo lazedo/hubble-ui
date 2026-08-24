@@ -4,6 +4,13 @@ export { KV };
 
 export const NamespaceLabelKey = 'io.kubernetes.pod.namespace';
 
+// The label Cilium (>= 1.17) stamps on CIDR identities covered by a named
+// CiliumCIDRGroup: the group name is the last segment of the KEY (the label
+// has no value). It is the one human-meaningful name a `reserved:world`
+// identity can carry, so it takes precedence over the reserved fallback when
+// deriving an app name (cilium/hubble-ui#1051).
+export const CIDRGroupNameLabelPrefix = 'cidrgroup:io.cilium.policy.cidrgroupname/';
+
 export interface LabelsProps {
   isHost: boolean;
   isKubeApiserver: boolean;
@@ -197,6 +204,12 @@ export class Labels {
   }
 
   public static findAppNameInLabels(labels: KV[], normalizeLabels = true): string | null {
+    // NOTE: A named CIDR group is the best name a world identity can have and
+    // such identities never carry k8s app labels — check it first so the
+    // result does not depend on label order (reserved:world may come first).
+    const cidrGroupName = Labels.findCIDRGroupNameInLabels(labels);
+    if (!!cidrGroupName) return cidrGroupName;
+
     for (const lbl of labels) {
       const kv = normalizeLabels ? Labels.normalizeLabel(lbl) : lbl;
 
@@ -248,6 +261,27 @@ export class Labels {
       return set;
     }, new Set());
     return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }
+
+  public static findCIDRGroupNameInLabels(labels: KV[]): string | null {
+    for (const lbl of labels) {
+      const name = Labels.getCIDRGroupName(lbl);
+      if (!!name) return name;
+    }
+
+    return null;
+  }
+
+  public static getCIDRGroupName(lbl: KV): string | null {
+    // NOTE: The group name lives in the KEY (after the prefix); the label has
+    // no value. normalizeKey() is not used here: `cidrgroup:` is not among
+    // the trimmed prefixes and the name must be preserved as-is (lowercased
+    // keys only).
+    const key = lbl.key.toLowerCase().replace(/=+$/, '');
+    if (!key.startsWith(CIDRGroupNameLabelPrefix)) return null;
+
+    const name = key.slice(CIDRGroupNameLabelPrefix.length);
+    return name.length > 0 ? name : null;
   }
 
   public static getReservedAppName(lbl: KV, normalizeLabel = true): string | null {
@@ -401,6 +435,14 @@ export class Labels {
     // NOTE: Now lets use smth more aggressive
     if (!props.appName) {
       props.appName = Labels.findAppNameFromLabelsParts(labels) || void 0;
+    }
+
+    // NOTE: A world identity covered by a named CiliumCIDRGroup has a real
+    // name — use it instead of the generic reserved-derived one, regardless
+    // of the order the labels arrived in (cilium/hubble-ui#1051).
+    if (props.isWorld) {
+      const cidrGroupName = Labels.findCIDRGroupNameInLabels(labels);
+      if (!!cidrGroupName) props.appName = cidrGroupName;
     }
 
     return props;

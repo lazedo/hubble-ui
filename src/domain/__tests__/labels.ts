@@ -48,6 +48,13 @@ describe('extract app name', () => {
     appNameTest(['reserved:unknown='], 'unknown');
   });
 
+  test('from named cidr group (cilium/hubble-ui#1051)', () => {
+    const cg = 'cidrgroup:io.cilium.policy.cidrgroupname/klab-dns-west';
+    appNameTest([cg, 'reserved:world'], 'klab-dns-west');
+    appNameTest(['reserved:world', cg], 'klab-dns-west');
+    appNameTest(['reserved:world', 'cidrgroup:role=klab-dns'], 'world');
+  });
+
   test('from k8s prefixed lbls', () => {
     appNameTest(['k8s:app=EXPECTED_NAME'], 'EXPECTED_NAME');
     appNameTest(['k8s:name=EXPECTED_NAME'], 'EXPECTED_NAME');
