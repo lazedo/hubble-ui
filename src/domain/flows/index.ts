@@ -151,6 +151,18 @@ export class Flow {
   }
 
   private memoSourceLabelProps: LabelsProps | undefined;
+  public get nodeName(): string {
+    return this.ref.nodeName;
+  }
+
+  // NOTE: with clustermesh the node name is "<cluster>/<node>"
+  public get clusterName(): string | null {
+    const nodeName = this.ref.nodeName || '';
+    const slashIdx = nodeName.indexOf('/');
+
+    return slashIdx > 0 ? nodeName.slice(0, slashIdx) : null;
+  }
+
   public get sourceLabelProps(): LabelsProps {
     if (this.memoSourceLabelProps !== undefined) return this.memoSourceLabelProps;
 

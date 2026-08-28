@@ -58,13 +58,20 @@ export const filter = (
       return;
     }
 
+    if (!filterServiceByClusters(card, filters)) {
+      blacklistServices.add(id);
+      return;
+    }
+
     // NOTE: if there is no filterEntries then we should traverse all in/out
     // NOTE: connections and use those senders/receivers, otherwise we should
     // NOTE: use those services, who match filterEntries + related to them
-    let checkOutgoings = !filters.filters?.length;
+    const entryFilters = filters.filters?.filter(f => !f.isCluster);
+
+    let checkOutgoings = !entryFilters?.length;
     let checkIncomings = checkOutgoings;
 
-    filters.filters?.forEach(filterEntry => {
+    entryFilters?.forEach(filterEntry => {
       if (!filterServiceByEntry(card.service, filterEntry)) return;
 
       checkOutgoings = checkOutgoings || filterEntry.fromRequired;
@@ -133,6 +140,25 @@ export const filter = (
     links: filteredLinks,
     services: [...clonedServices.values()],
   };
+};
+
+const filterServiceByClusters = (card: ServiceCard, filters: Filters): boolean => {
+  const clusterEntries = filters.filters?.filter(f => f.isCluster) || [];
+  if (clusterEntries.length === 0) return true;
+
+  // NOTE: cards without a cluster name (world, host, CIDR groups without a
+  // NOTE: site label) are kept: they are endpoints of flows that already
+  // NOTE: passed the cluster filter at the flow level
+  const cluster = card.clusterName;
+  if (cluster == null) return true;
+
+  const positive = clusterEntries.filter(f => !f.negative).map(f => f.query);
+  const negative = clusterEntries.filter(f => f.negative).map(f => f.query);
+
+  if (positive.length > 0 && !positive.includes(cluster)) return false;
+  if (negative.length > 0 && negative.includes(cluster)) return false;
+
+  return true;
 };
 
 // NOTE: connections is { receiverId -> Set(of all sender IDs)

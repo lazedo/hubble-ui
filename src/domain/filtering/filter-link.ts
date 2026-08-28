@@ -17,9 +17,11 @@ export const filterLink = (link: Link, filters: Filters): boolean => {
 
   if (link.isDNSRequest && filters.skipKubeDns) return false;
 
-  if (!filters.filters?.length) return true;
+  // NOTE: cluster entries are flow-level, links know nothing about nodes
+  const linkEntries = filters.filters?.filter(f => !f.isCluster) || [];
+  if (!linkEntries.length) return true;
 
-  for (const ff of filters.filters) {
+  for (const ff of linkEntries) {
     const ffResult = filterLinkByEntry(link, ff);
 
     if (ff.negative && !ffResult) return false;

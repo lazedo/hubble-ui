@@ -9,6 +9,7 @@ import { NamespaceDescriptor } from '~/domain/namespaces';
 
 import { FlowsFilterInput } from './FlowsFilterInput';
 import { VerdictFilterDropdown } from './VerdictFilterDropdown';
+import { ClusterFilterDropdown } from './ClusterFilterDropdown';
 import { VisualFiltersDropdown } from './VisualFiltersDropdown';
 import { NamespaceSelectorDropdown } from './NamespaceSelectorDropdown';
 import { ConnectionIndicator } from './ConnectionIndicator';
@@ -23,6 +24,10 @@ export interface Props {
   onNamespaceChange?: (ns: NamespaceDescriptor) => void;
   selectedVerdict: Verdict | null;
   onVerdictChange?: (verdict: Verdict | null) => void;
+  knownClusters: string[];
+  selectedClusters: string[];
+  onClusterToggle?: (cluster: string) => void;
+  onClustersClear?: () => void;
   selectedHttpStatus: string | null;
   onHttpStatusChange?: (httpStatus: string | null) => void;
   flowFilters: FilterEntry[];
@@ -45,6 +50,13 @@ export const TopBar = observer(function TopBar(props: Props) {
       <FlowsFilterInput filters={props.flowFilters} onChange={props.onChangeFlowFilters} />
       <div className={css.spacer} />
       <VerdictFilterDropdown verdict={props.selectedVerdict} onSelect={props.onVerdictChange} />
+      <div className={css.border} />
+      <ClusterFilterDropdown
+        clusters={props.knownClusters}
+        selected={props.selectedClusters}
+        onToggle={props.onClusterToggle}
+        onClear={props.onClustersClear}
+      />
       <div className={css.border} />
       <VisualFiltersDropdown
         showHost={props.showHost}

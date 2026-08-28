@@ -78,6 +78,20 @@ export const ServiceMapApp = observer(function ServiceMapApp() {
     setMapWasDragged(val);
   }, []);
 
+  const onClusterToggle = useCallback((cluster: string) => {
+    const all = store.controls.flowFilters;
+    const rest = all.filter(f => !(f.isCluster && !f.negative && f.query === cluster));
+    const next = rest.length !== all.length ? rest : [...all, FilterEntry.newCluster(cluster)];
+
+    ui.controls.setFlowFilters(next);
+  }, []);
+
+  const onClustersClear = useCallback(() => {
+    ui.controls.setFlowFilters(
+      store.controls.flowFilters.filter(f => !(f.isCluster && !f.negative)),
+    );
+  }, []);
+
   const onSidebarVerdictClick = useCallback((v: Verdict | null) => {
     ui.controls.toggleVerdict(v);
   }, []);
@@ -154,6 +168,10 @@ export const ServiceMapApp = observer(function ServiceMapApp() {
       onNamespaceChange={ns => ui.controls.namespaceChanged(ns?.namespace)}
       selectedVerdict={store.controls.activeVerdict}
       onVerdictChange={v => ui.controls.toggleVerdict(v)}
+      knownClusters={Array.from(store.controls.knownClusters).sort()}
+      selectedClusters={store.controls.selectedClusters}
+      onClusterToggle={onClusterToggle}
+      onClustersClear={onClustersClear}
       selectedHttpStatus={store.controls.httpStatus}
       onHttpStatusChange={store.controls.setHttpStatus}
       flowFilters={store.controls.filteredFlowFilters}

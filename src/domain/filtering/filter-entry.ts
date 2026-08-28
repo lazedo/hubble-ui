@@ -11,6 +11,7 @@ export enum Kind {
   Workload = 'workload',
   TCPFlag = 'tcp-flag',
   Pod = 'pod',
+  Cluster = 'cluster',
 }
 
 export enum Direction {
@@ -182,6 +183,15 @@ export class FilterEntry {
     });
   }
 
+  public static newCluster(cluster: string): FilterEntry {
+    return new FilterEntry({
+      kind: Kind.Cluster,
+      query: cluster,
+      direction: Direction.Either,
+      meta: '',
+    });
+  }
+
   private static parseParts(userInput: string): [Direction, Kind, string, boolean] | null {
     // NOTE: This helper method simplifies the original parsing of raw userInput
     const negative: boolean = userInput[0] === '!';
@@ -337,6 +347,10 @@ export class FilterEntry {
 
   public get isWorkload(): boolean {
     return this.kind === Kind.Workload;
+  }
+
+  public get isCluster(): boolean {
+    return this.kind === Kind.Cluster;
   }
 
   public get fromRequired(): boolean {

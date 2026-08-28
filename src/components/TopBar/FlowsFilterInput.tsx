@@ -111,7 +111,7 @@ function tagRenderer(item: FilterEntry | null) {
 
   return (
     <div className={css.tag}>
-      <TagDirection direction={item.direction} />
+      {item.kind !== FilterKind.Cluster && <TagDirection direction={item.direction} />}
       <span className={css.body}>
         {item.negative && <span className={css.negative}>!</span>}
         <span className={css.kind}>{item.kind}</span>

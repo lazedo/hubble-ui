@@ -16,6 +16,7 @@ export class ControlStore {
   public verdicts = new Set<Verdict>();
   public httpStatus: string | null = null;
   public flowFilters: FilterEntry[] = [];
+  public knownClusters: Set<string> = new Set();
   public showHost = false;
   public showKubeDns = false;
   public showRemoteNode = false;
@@ -38,6 +39,7 @@ export class ControlStore {
     store.verdicts = deep ? _.cloneDeep(this.verdicts) : this.verdicts;
     store.httpStatus = this.httpStatus;
     store.flowFilters = deep ? ffs.map(f => f.clone()) : ffs.slice();
+    store.knownClusters = new Set(this.knownClusters);
     store.currentApp = this.currentApp;
 
     return store;
@@ -89,6 +91,12 @@ export class ControlStore {
     this.flowFilters = ffs;
 
     return prev;
+  }
+
+  addKnownClusters(clusters: (string | null)[]): void {
+    clusters.forEach(c => {
+      if (c) this.knownClusters.add(c);
+    });
   }
 
   setShowHost(val: boolean): boolean {
@@ -155,6 +163,10 @@ export class ControlStore {
 
   public get filteredFlowFilters() {
     return this.flowFilters.filter(f => !f.isTCPFlag);
+  }
+
+  public get selectedClusters(): string[] {
+    return this.flowFilters.filter(f => f.isCluster && !f.negative).map(f => f.query);
   }
 
   public get activeVerdict(): Verdict | null {

@@ -58,7 +58,9 @@ export class ProtoFactory {
     const wlFilters: flowpb.FlowFilter[] = [];
     const blFilters = ProtoFactory.blacklistFlowFilters(filters);
 
-    const positiveEntries = filters.filters?.filter(filter => !filter.negative);
+    const positiveEntries = filters.filters?.filter(
+      filter => !filter.negative && !filter.isCluster,
+    );
     if (!positiveEntries?.length) {
       const namespace = filters?.namespace;
 
@@ -203,6 +205,13 @@ export class ProtoFactory {
       blFilters.push(blDstPodFilter);
     }
 
+    const negClusters = filters?.filters?.filter(f => f.isCluster && f.negative && !!f.query);
+    if (negClusters?.length) {
+      const blClusterFilter = flowpb.FlowFilter.create();
+      negClusters.forEach(fe => blClusterFilter.nodeName.push(`${fe.query}/`));
+      blFilters.push(blClusterFilter);
+    }
+
     return blFilters;
   }
 
@@ -225,6 +234,15 @@ export class ProtoFactory {
     });
 
     // TODO: code for handling tcp flags should be here
+
+    // NOTE: positive cluster entries narrow every whitelist filter;
+    // NOTE: "<cluster>/" is a hubble node-name pattern: exact cluster name,
+    // NOTE: any node (cilium pkg/hubble/filters/patterns.go)
+    filters?.filters?.forEach(fe => {
+      if (!fe.isCluster || fe.negative || !fe.query) return;
+
+      wlFilter.nodeName.push(`${fe.query}/`);
+    });
 
     wlFilter.reply.push(false);
     return wlFilter;

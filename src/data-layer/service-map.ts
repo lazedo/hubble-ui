@@ -258,6 +258,8 @@ export class ServiceMap extends EventEmitter<Handlers> {
   }
 
   private handleFlows(frame: StoreFrame, flows: Flow[]) {
+    this.store.controls.addKnownClusters(flows.map(f => f.clusterName));
+
     const { flowsDiffCount } = frame.addFlows(flows);
 
     this.emit(Event.FlowsDiff, flowsDiffCount, frame);

@@ -51,9 +51,22 @@ export const filterFlow = (flow: Flow, filters: Filters): boolean => {
     if (rangeSign === '-' && flow.httpStatus > httpStatus) return false;
   }
 
-  if (!filters.filters?.length) return true;
+  // NOTE: cluster entries narrow the whole view (AND), they never take part
+  // NOTE: in the OR loop below
+  const clusterEntries = filters.filters?.filter(f => f.isCluster) || [];
+  if (clusterEntries.length > 0) {
+    const positive = clusterEntries.filter(f => !f.negative).map(f => f.query);
+    const negative = clusterEntries.filter(f => f.negative).map(f => f.query);
+    const cluster = flow.clusterName;
 
-  for (const ff of filters.filters) {
+    if (positive.length > 0 && (cluster == null || !positive.includes(cluster))) return false;
+    if (negative.length > 0 && cluster != null && negative.includes(cluster)) return false;
+  }
+
+  const restEntries = filters.filters?.filter(f => !f.isCluster) || [];
+  if (!restEntries.length) return true;
+
+  for (const ff of restEntries) {
     const ffResult = filterFlowByEntry(flow, ff);
 
     if (ff.negative && !ffResult) return false;
@@ -94,6 +107,9 @@ export const filterFlowByEntry = (flow: Flow, filter: FilterEntry): boolean => {
     case FilterKind.TCPFlag: {
       // TODO: Revisit
       return filter.negative !== flow.hasTCPFlag(filter.query.toLowerCase() as any);
+    }
+    case FilterKind.Cluster: {
+      return filter.negative !== (flow.clusterName === filter.query);
     }
     case FilterKind.Pod: {
       if (filter.fromRequired) fromOk = flow.senderPodIs(filter.query);
