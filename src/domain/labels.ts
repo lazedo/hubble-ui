@@ -466,8 +466,8 @@ export class Labels {
       // — surface it as the card cluster badge, like workload cards get from
       // the cilium cluster label.
       if (!props.clusterName) {
-        const site = Labels.findKVByString(labels, 'cidrgroup:site');
-        if (!!site?.value) props.clusterName = site.value;
+        const site = labels.find(l => l.key.toLowerCase() === 'cidrgroup:site' && !!l.value);
+        if (!!site) props.clusterName = site.value;
       }
     }
 

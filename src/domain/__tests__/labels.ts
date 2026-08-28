@@ -65,9 +65,11 @@ describe('extract app name', () => {
     const labels = ['reserved:world', 'cidrgroup:site=central'].map(l => Labels.toKV(l));
     expect(Labels.detect(labels).clusterName).toBe('central');
     // a real cluster label wins over the group site
-    const both = ['reserved:world', 'k8s:io.cilium.k8s.policy.cluster=west', 'cidrgroup:site=central'].map(l =>
-      Labels.toKV(l),
-    );
+    const both = [
+      'reserved:world',
+      'k8s:io.cilium.k8s.policy.cluster=west',
+      'cidrgroup:site=central',
+    ].map(l => Labels.toKV(l));
     expect(Labels.detect(both).clusterName).toBe('west');
   });
 
