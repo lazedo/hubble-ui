@@ -461,6 +461,14 @@ export class Labels {
       if (!!cidrGroupName) props.appName = cidrGroupName;
 
       props.cidrGroupIcon = Labels.findCIDRGroupIconInLabels(labels) || void 0;
+
+      // NOTE: A group may tag its identities with a site (cidrgroup:site=<x>)
+      // — surface it as the card cluster badge, like workload cards get from
+      // the cilium cluster label.
+      if (!props.clusterName) {
+        const site = Labels.findKVByString(labels, 'cidrgroup:site');
+        if (!!site?.value) props.clusterName = site.value;
+      }
     }
 
     return props;

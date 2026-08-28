@@ -154,6 +154,18 @@ func getServiceId(
 		return strconv.FormatUint(uint64(ep.GetIdentity()), 10)
 	}
 
+	// NOTE: A world identity covered by a NAMED CiliumCIDRGroup gets its own
+	// card per group and side — otherwise every world endpoint collapses into
+	// the single aggregated card below and the name shown becomes a lottery
+	// across groups (observed with klab-dns-{west,east,central}).
+	if lblProps.IsWorld && lblProps.CIDRGroupName != nil {
+		side := "sender"
+		if isReceiver {
+			side = "receiver"
+		}
+		return fmt.Sprintf("%s-%s", *lblProps.CIDRGroupName, side)
+	}
+
 	// NOTE: By some reason, workloads not available for the same service every time
 	if len(ep.GetWorkloads()) > 0 {
 		wl := ep.GetWorkloads()[0]
