@@ -2,7 +2,7 @@ import React from 'react';
 import { observer } from 'mobx-react';
 
 import { Verdict } from '~/domain/hubble';
-import { FilterEntry } from '~/domain/filtering';
+import { FilterEntry, FilterDirection } from '~/domain/filtering';
 import { Status } from '~/domain/status';
 import { TransferState } from '~/domain/interactions';
 import { NamespaceDescriptor } from '~/domain/namespaces';
@@ -25,8 +25,8 @@ export interface Props {
   selectedVerdict: Verdict | null;
   onVerdictChange?: (verdict: Verdict | null) => void;
   knownClusters: string[];
-  selectedClusters: string[];
-  onClusterToggle?: (cluster: string) => void;
+  selectedClusters: FilterEntry[];
+  onClusterToggle?: (cluster: string, direction: FilterDirection) => void;
   onClustersClear?: () => void;
   selectedHttpStatus: string | null;
   onHttpStatusChange?: (httpStatus: string | null) => void;

@@ -178,8 +178,10 @@ export class ControlStore {
     return this.flowFilters.filter(f => !f.isTCPFlag);
   }
 
-  public get selectedClusters(): string[] {
-    return this.flowFilters.filter(f => f.isCluster && !f.negative).map(f => f.query);
+  // NOTE: the positive cluster entries, each with its direction (observed in /
+  // NOTE: source / destination)
+  public get selectedClusterEntries(): FilterEntry[] {
+    return this.flowFilters.filter(f => f.isCluster && !f.negative);
   }
 
   public get activeVerdict(): Verdict | null {

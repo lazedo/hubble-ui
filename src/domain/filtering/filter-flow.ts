@@ -1,6 +1,7 @@
 import { Flow } from '~/domain/flows';
 import * as dhelpers from '~/domain/helpers';
-import { FilterEntry, Kind as FilterKind } from './filter-entry';
+import { Direction, FilterEntry, Kind as FilterKind } from './filter-entry';
+import { passesClusterEntries } from './filter-cluster';
 
 import { Filters } from '~/domain/filtering';
 
@@ -55,14 +56,14 @@ export const filterFlow = (flow: Flow, filters: Filters): boolean => {
   // NOTE: cluster entries narrow the whole view (AND), they never take part
   // NOTE: in the OR loop below
   const clusterEntries = filters.filters?.filter(f => f.isCluster) || [];
-  if (clusterEntries.length > 0) {
-    const positive = clusterEntries.filter(f => !f.negative).map(f => f.query);
-    const negative = clusterEntries.filter(f => f.negative).map(f => f.query);
-    const cluster = flow.clusterName;
-
-    if (positive.length > 0 && (cluster == null || !positive.includes(cluster))) return false;
-    if (negative.length > 0 && cluster != null && negative.includes(cluster)) return false;
-  }
+  const clusterOk = passesClusterEntries(clusterEntries, dir =>
+    dir === Direction.From
+      ? flow.sourceClusterName
+      : dir === Direction.To
+        ? flow.destinationClusterName
+        : flow.clusterName,
+  );
+  if (!clusterOk) return false;
 
   const restEntries = filters.filters?.filter(f => !f.isCluster) || [];
   if (!restEntries.length) return true;

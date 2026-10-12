@@ -5,7 +5,7 @@ import React, { useCallback, useState } from 'react';
 
 import { TagDirection } from './TagDirection';
 
-import { FilterEntry, FilterKind } from '~/domain/filtering';
+import { FilterEntry, FilterKind, FilterDirection } from '~/domain/filtering';
 import { Labels } from '~/domain/labels';
 
 import css from './FlowsFilterInput.scss';
@@ -111,7 +111,10 @@ function tagRenderer(item: FilterEntry | null) {
 
   return (
     <div className={css.tag}>
-      {item.kind !== FilterKind.Cluster && <TagDirection direction={item.direction} />}
+      {/* NOTE: an either-direction cluster entry means "observed in", not from/to */}
+      {(item.kind !== FilterKind.Cluster || item.direction !== FilterDirection.Either) && (
+        <TagDirection direction={item.direction} />
+      )}
       <span className={css.body}>
         {item.negative && <span className={css.negative}>!</span>}
         <span className={css.kind}>{item.kind}</span>

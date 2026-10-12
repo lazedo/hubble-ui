@@ -4,7 +4,7 @@ import * as flowpb from '~backend/proto/flow/flow_pb';
 import { EventParams, EventParamsSet } from '~/api/general/event-stream';
 
 import { ReservedLabel, SpecialLabel } from '~/domain/labels';
-import { Filters, FilterEntry, FilterKind } from '~/domain/filtering';
+import { Filters, FilterEntry, FilterKind, FilterDirection } from '~/domain/filtering';
 import { CiliumEventTypes } from '~/domain/cilium';
 import * as helpers from '~/domain/helpers';
 
@@ -205,14 +205,34 @@ export class ProtoFactory {
       blFilters.push(blDstPodFilter);
     }
 
-    const negClusters = filters?.filters?.filter(f => f.isCluster && f.negative && !!f.query);
-    if (negClusters?.length) {
+    const negClusters = filters?.filters?.filter(f => f.isCluster && f.negative && !!f.query) ?? [];
+    [FilterDirection.Either, FilterDirection.From, FilterDirection.To].forEach(dir => {
+      const names = negClusters.filter(fe => fe.direction === dir).map(fe => fe.query);
+      if (names.length === 0) return;
+
       const blClusterFilter = flowpb.FlowFilter.create();
-      negClusters.forEach(fe => blClusterFilter.nodeName.push(`${fe.query}/`));
+      ProtoFactory.addClusterNames(blClusterFilter, dir, names);
       blFilters.push(blClusterFilter);
-    }
+    });
 
     return blFilters;
+  }
+
+  // NOTE: "Observed in" (either) is the cluster of the node that saw the flow:
+  // NOTE: "<cluster>/" is a hubble node-name pattern, exact cluster name, any
+  // NOTE: node (cilium pkg/hubble/filters/patterns.go). From/to is the cluster
+  // NOTE: of the source/destination endpoint (pkg/hubble/filters/cluster_name.go).
+  public static addClusterNames(ff: flowpb.FlowFilter, dir: FilterDirection, names: string[]) {
+    switch (dir) {
+      case FilterDirection.From:
+        ff.sourceClusterName.push(...names);
+        break;
+      case FilterDirection.To:
+        ff.destinationClusterName.push(...names);
+        break;
+      default:
+        ff.nodeName.push(...names.map(name => `${name}/`));
+    }
   }
 
   public static baseWhitelistFilter(filters?: Filters): flowpb.FlowFilter {
@@ -235,13 +255,12 @@ export class ProtoFactory {
 
     // TODO: code for handling tcp flags should be here
 
-    // NOTE: positive cluster entries narrow every whitelist filter;
-    // NOTE: "<cluster>/" is a hubble node-name pattern: exact cluster name,
-    // NOTE: any node (cilium pkg/hubble/filters/patterns.go)
+    // NOTE: positive cluster entries narrow every whitelist filter (fields of
+    // NOTE: one filter AND, the names in one field OR)
     filters?.filters?.forEach(fe => {
       if (!fe.isCluster || fe.negative || !fe.query) return;
 
-      wlFilter.nodeName.push(`${fe.query}/`);
+      ProtoFactory.addClusterNames(wlFilter, fe.direction, [fe.query]);
     });
 
     wlFilter.reply.push(false);

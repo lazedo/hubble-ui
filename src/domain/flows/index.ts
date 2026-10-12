@@ -163,6 +163,16 @@ export class Flow {
     return slashIdx > 0 ? nodeName.slice(0, slashIdx) : null;
   }
 
+  // NOTE: the cluster of the endpoint itself (its cilium cluster label), which
+  // NOTE: is not the cluster that observed the flow when it crosses the mesh
+  public get sourceClusterName(): string | null {
+    return this.sourceLabelProps.clusterName || null;
+  }
+
+  public get destinationClusterName(): string | null {
+    return this.destinationLabelProps.clusterName || null;
+  }
+
   public get sourceLabelProps(): LabelsProps {
     if (this.memoSourceLabelProps !== undefined) return this.memoSourceLabelProps;
 

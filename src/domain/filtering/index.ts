@@ -6,6 +6,7 @@ import { LinkConnections } from '~/domain/interactions/connections';
 import { Filters, FiltersObject, FiltersKey } from './filters';
 
 import { filterFlow, filterFlowByEntry } from './filter-flow';
+import { passesClusterEntries } from './filter-cluster';
 import { filterLink, filterLinkByEntry } from './filter-link';
 import { filterService, filterServiceByEntry } from './filter-service';
 import { FiltersDiff } from './filters-diff';
@@ -123,6 +124,19 @@ export const filter = (
           return;
         }
 
+        // NOTE: from/to cluster entries apply to the cards at either end
+        const clusterOk = passesClusterEntries(filters.filters || [], dir =>
+          dir === FilterDirection.From
+            ? (cardsMap.get(senderId)?.clusterName ?? null)
+            : dir === FilterDirection.To
+              ? (cardsMap.get(receiverId)?.clusterName ?? null)
+              : void 0,
+        );
+        if (!clusterOk) {
+          blacklistLinks.add(link.id);
+          return;
+        }
+
         // NOTE: if we got to this point, then sender and receiver must exist
         // NOTE: and their degrees are definitely !== 0
         ensureService(clonedServices, cardsMap, senderId);
@@ -143,7 +157,10 @@ export const filter = (
 };
 
 const filterServiceByClusters = (card: ServiceCard, filters: Filters): boolean => {
-  const clusterEntries = filters.filters?.filter(f => f.isCluster) || [];
+  // NOTE: only "observed in" entries hide cards; from/to entries are about one
+  // NOTE: end of a link (see the link loop above), the other end may be anywhere
+  const clusterEntries =
+    filters.filters?.filter(f => f.isCluster && f.direction === FilterDirection.Either) || [];
   if (clusterEntries.length === 0) return true;
 
   // NOTE: cards without a cluster name (world, host, CIDR groups without a
