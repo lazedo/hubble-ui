@@ -254,6 +254,7 @@ export class ProtoFactory {
   ): flowpb.FlowFilter[] {
     const { kind, query } = filter;
     const wlFilters: flowpb.FlowFilter[] = [];
+    const nameLabelTwins: flowpb.FlowFilter[] = [];
 
     const podsInNamespace = filters.namespace ? `${filters.namespace}/` : null;
     const pod = filter.podNamespace
@@ -309,6 +310,9 @@ export class ProtoFactory {
 
           toInside.sourceWorkload.push(workload);
           fromInside.sourceWorkload.push(workload);
+          nameLabelTwins.push(
+            ...ProtoFactory.workloadNameLabelTwins([toInside, fromInside], 'source'),
+          );
           break;
         }
       }
@@ -363,6 +367,9 @@ export class ProtoFactory {
 
           toInside.destinationWorkload.push(workload);
           fromInside.destinationWorkload.push(workload);
+          nameLabelTwins.push(
+            ...ProtoFactory.workloadNameLabelTwins([fromInside, toInside], 'destination'),
+          );
           break;
         }
       }
@@ -370,7 +377,31 @@ export class ProtoFactory {
       wlFilters.push(fromInside, toInside);
     }
 
+    wlFilters.push(...nameLabelTwins);
     return wlFilters;
+  }
+
+  // NOTE: Hubble fills endpoint workloads only for the cluster that observed
+  // NOTE: the flow, so a workload filter alone drops every cross-cluster flow
+  // NOTE: seen at the far end. Each workload filter also goes out with the
+  // NOTE: workload's name label in its place (see domain/helpers/workload.ts).
+  public static workloadNameLabelTwins(
+    ffs: flowpb.FlowFilter[],
+    side: 'source' | 'destination',
+  ): flowpb.FlowFilter[] {
+    return ffs.map(ff => {
+      const twin = flowpb.FlowFilter.clone(ff);
+
+      if (side === 'source') {
+        twin.sourceLabel.push(...twin.sourceWorkload.map(helpers.workload.nameLabel));
+        twin.sourceWorkload = [];
+      } else {
+        twin.destinationLabel.push(...twin.destinationWorkload.map(helpers.workload.nameLabel));
+        twin.destinationWorkload = [];
+      }
+
+      return twin;
+    });
   }
 
   public static workloadFromFilterEntry(fe: FilterEntry): flowpb.Workload | null {

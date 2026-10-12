@@ -1,4 +1,19 @@
 import { Workload } from '~/domain/hubble';
+import { KV, Labels } from '~/domain/labels';
+
+// NOTE: Hubble fills endpoint workloads only for the cluster that observed the
+// NOTE: flow (the agent's local pod informer): a flow seen in another cluster
+// NOTE: of the mesh carries the remote endpoint's identity labels, but no
+// NOTE: workload. The recommended app.kubernetes.io/name label (the kazoo
+// NOTE: operator sets it to the workload name) is part of the identity in
+// NOTE: every cluster, so a workload is also matched by it.
+export const NameLabelKey = 'k8s:app.kubernetes.io/name';
+
+export const nameLabel = (wl: Workload): string => `${NameLabelKey}=${wl.name.trim()}`;
+
+export const matchesNameLabel = (labels: KV[], wl: Workload): boolean => {
+  return Labels.findKVByString(labels, nameLabel(wl)) != null;
+};
 
 export const equals = (lhs: Workload, rhs: Workload): boolean => {
   const lkind = getKindShorthand(lhs.kind.trim());

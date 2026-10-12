@@ -27,7 +27,9 @@ export const filterServiceByEntry = (service: Service, e: FilterEntry): boolean 
   if (e.isWorkload) {
     const workload = e.asWorkload();
     if (workload != null) {
-      pass = dhelpers.workload.includes(service.workloads, workload);
+      pass =
+        dhelpers.workload.includes(service.workloads, workload) ||
+        dhelpers.workload.matchesNameLabel(service.labels, workload);
     }
   }
 

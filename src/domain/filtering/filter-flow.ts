@@ -1,4 +1,5 @@
 import { Flow } from '~/domain/flows';
+import * as dhelpers from '~/domain/helpers';
 import { FilterEntry, Kind as FilterKind } from './filter-entry';
 
 import { Filters } from '~/domain/filtering';
@@ -121,8 +122,16 @@ export const filterFlowByEntry = (flow: Flow, filter: FilterEntry): boolean => {
       const workload = filter.asWorkload();
       if (workload == null) break;
 
-      if (filter.fromRequired) fromOk = flow.senderHasWorkload(workload);
-      if (filter.toRequired) toOk = flow.receiverHasWorkload(workload);
+      if (filter.fromRequired) {
+        fromOk =
+          flow.senderHasWorkload(workload) ||
+          dhelpers.workload.matchesNameLabel(flow.sourceLabels, workload);
+      }
+      if (filter.toRequired) {
+        toOk =
+          flow.receiverHasWorkload(workload) ||
+          dhelpers.workload.matchesNameLabel(flow.destinationLabels, workload);
+      }
 
       break;
     }
