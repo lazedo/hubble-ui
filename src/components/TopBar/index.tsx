@@ -40,6 +40,8 @@ export interface Props {
   onShowRemoteNodeToggle?: () => void;
   showPrometheusApp: boolean;
   onShowPrometheusAppToggle: () => void;
+  mergeClusters?: boolean;
+  onMergeClustersToggle?: () => void;
 }
 
 export const TopBar = observer(function TopBar(props: Props) {
@@ -67,6 +69,8 @@ export const TopBar = observer(function TopBar(props: Props) {
         onShowRemoteNodeToggle={props.onShowRemoteNodeToggle}
         showPrometheusApp={props.showPrometheusApp}
         onShowPrometheusAppToggle={props.onShowPrometheusAppToggle}
+        mergeClusters={props.mergeClusters}
+        onMergeClustersToggle={props.onMergeClustersToggle}
       />
     </>
   );

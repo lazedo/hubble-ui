@@ -42,6 +42,7 @@ export class Store {
 
     this.globalFrame = StoreFrame.emptyWithShared(this.controls, this.namespaces);
     this.currentFrame = StoreFrame.emptyWithShared(this.controls, this.namespaces);
+    this.currentFrame.enableMeshMergeView();
 
     this.setupEventHandlers();
     this.setupDebugTools();
@@ -126,7 +127,7 @@ export class Store {
   }
 
   public getActiveServices(): ServiceCard[] {
-    return this.currentFrame.services.cardsList.filter(card => {
+    return this.currentFrame.services.viewCardsList.filter(card => {
       return this.currentFrame.controls.areSomeFilterEntriesEnabled(card.filterEntries);
     });
   }

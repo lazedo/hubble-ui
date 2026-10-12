@@ -21,6 +21,8 @@ export class ControlStore {
   public showKubeDns = false;
   public showRemoteNode = false;
   public showPrometheusApp = false;
+  // NOTE: One card per workload across the clusters of a mesh (view only)
+  public mergeClusters = false;
 
   constructor() {
     makeAutoObservable(this, void 0, {
@@ -41,6 +43,7 @@ export class ControlStore {
     store.flowFilters = deep ? ffs.map(f => f.clone()) : ffs.slice();
     store.knownClusters = new Set(this.knownClusters);
     store.currentApp = this.currentApp;
+    store.mergeClusters = this.mergeClusters;
 
     return store;
   }
@@ -137,6 +140,16 @@ export class ControlStore {
 
   toggleShowPrometheusApp(): boolean {
     return this.setShowPrometheusApp(!this.showPrometheusApp);
+  }
+
+  setMergeClusters(val: boolean): boolean {
+    this.mergeClusters = val;
+
+    return val;
+  }
+
+  toggleMergeClusters(): boolean {
+    return this.setMergeClusters(!this.mergeClusters);
   }
 
   setFilters(f: Filters) {

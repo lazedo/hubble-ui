@@ -237,7 +237,7 @@ export class ServiceMap extends EventEmitter<Handlers> {
 
   public toggleActiveCardFilterEntry(cardId: string) {
     const services = this.store.currentFrame.services;
-    const card = services.byId(cardId);
+    const card = services.viewById(cardId);
     if (card == null) return;
 
     const isActive = this.store.controls.areSomeFilterEntriesEnabled(card.filterEntries);

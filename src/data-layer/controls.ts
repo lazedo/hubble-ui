@@ -129,6 +129,12 @@ export class Controls extends EventEmitter<Handlers> {
     this.emit(Event.ShowPrometheusAppChanged, Diff.new(!isActive).step(isActive));
   }
 
+  // NOTE: View only (the rendered frame merges its cards): nothing to refetch
+  public toggleMergeClusters() {
+    const isActive = this.store.controls.toggleMergeClusters();
+    storage.saveMergeClusters(isActive);
+  }
+
   public setHTTPStatus(st: string | null) {
     const prev = this.store.controls.setHttpStatus(st);
     if (prev === st) return;

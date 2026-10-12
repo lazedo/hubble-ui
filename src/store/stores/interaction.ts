@@ -3,6 +3,7 @@ import { makeAutoObservable } from 'mobx';
 
 import { Flow, HubbleFlow } from '~/domain/flows';
 import { Link } from '~/domain/service-map';
+import { remapLinks } from '~/domain/service-map/mesh-merge';
 import { HubbleLink, L7Kind, Verdict } from '~/domain/hubble';
 import { StateChange } from '~/domain/misc';
 import { LinkConnections } from '~/domain/interactions/connections';
@@ -24,6 +25,9 @@ export class InteractionStore {
 
   private _flows: Flow[];
   private _links: Link[];
+
+  // NOTE: Card id remapping of the rendered frame (see ServiceStore.viewCardsList)
+  private viewServices: { viewIdRemap: Map<string, string> } | null = null;
 
   // NOTE: { serviceId -> { port -> { l7kind -> { epId -> L7Endpoint }}}}
   public l7endpoints: GroupedPartialConnections<L7Endpoint>;
@@ -298,6 +302,19 @@ export class InteractionStore {
 
   get connections(): LinkConnections {
     return LinkConnections.buildFromLinks(this._links);
+  }
+
+  public setViewServices(services: { viewIdRemap: Map<string, string> } | null) {
+    this.viewServices = services;
+  }
+
+  // NOTE: The links as the map shows them, pointing to the (possibly merged)
+  // NOTE: cards of ServiceStore.viewCardsList
+  get viewConnections(): LinkConnections {
+    const idRemap = this.viewServices?.viewIdRemap;
+    if (idRemap == null || idRemap.size === 0) return this.connections;
+
+    return LinkConnections.buildFromLinks(remapLinks(this._links, idRemap));
   }
 
   get all() {

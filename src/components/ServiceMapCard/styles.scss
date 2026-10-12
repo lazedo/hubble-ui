@@ -72,6 +72,16 @@
   &:last-child {
     margin-bottom: 10px;
   }
+
+  // one per cluster on a card merged across the mesh
+  .clusterNameBadge {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 0 8px;
+    line-height: 22px;
+    border: 1px solid #d4d4d4;
+    border-radius: 11px;
+  }
 }
 
 .accessPoints {

@@ -19,12 +19,18 @@ interface Props {
   onShowRemoteNodeToggle?: () => void;
   showPrometheusApp: boolean;
   onShowPrometheusAppToggle?: () => void;
+  mergeClusters?: boolean;
+  onMergeClustersToggle?: () => void;
 }
 
 export const VisualFiltersDropdown = observer(function VisualFiltersDropdown(props: Props) {
   const popover = usePopover();
   const enabled =
-    !props.showHost || !props.showKubeDns || !props.showRemoteNode || !props.showPrometheusApp;
+    !props.showHost ||
+    !props.showKubeDns ||
+    !props.showRemoteNode ||
+    !props.showPrometheusApp ||
+    !!props.mergeClusters;
 
   const content = (
     <Menu className={css.visualFiltersMenu}>
@@ -72,6 +78,19 @@ export const VisualFiltersDropdown = observer(function VisualFiltersDropdown(pro
           />
         }
       />
+      {props.onMergeClustersToggle != null && (
+        <MenuItem
+          shouldDismissPopover={false}
+          text={
+            <Checkbox
+              checked={!!props.mergeClusters}
+              label="Merge clusters (one card per workload)"
+              onClick={props.onMergeClustersToggle}
+              className={css.checkbox}
+            />
+          }
+        />
+      )}
     </Menu>
   );
 

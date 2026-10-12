@@ -130,7 +130,7 @@ export class ServiceMapArrowStrategy extends ArrowStrategy {
         const receiverBBox = bboxes.get(receiverId);
         if (receiverBBox == null) return;
 
-        const receiverCard = this.services.byId(receiverId);
+        const receiverCard = this.services.viewById(receiverId);
         if (receiverCard == null) return;
         // NOTE: Save sender/receiver bboxes to be able to construct path
         // NOTE: that walks around those bboxes later
@@ -232,7 +232,7 @@ export class ServiceMapArrowStrategy extends ArrowStrategy {
 
   @computed
   private get connections() {
-    return this.interactions.connections;
+    return this.interactions.viewConnections;
   }
 
   // Gives mid of physical APs
@@ -241,7 +241,7 @@ export class ServiceMapArrowStrategy extends ArrowStrategy {
   private get connectorMidPoints(): Map<string, Vec2> {
     const index = new Map<string, Vec2>();
 
-    this.services.cardsList.forEach(card => {
+    this.services.viewCardsList.forEach(card => {
       if (card.accessPoints.size === 0) return;
       const position = Vec2.zero();
       let nPoints = card.accessPoints.size;

@@ -73,6 +73,10 @@ export class Controls {
     this.dataLayer.controls.toggleShowPrometheusApp();
   }
 
+  public toggleMergeClusters() {
+    this.dataLayer.controls.toggleMergeClusters();
+  }
+
   public setFlowFilters(ff: FilterEntry[] | null) {
     this.dataLayer.controls.setFlowFilters(ff);
     this.router.commit();

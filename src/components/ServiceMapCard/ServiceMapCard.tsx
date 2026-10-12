@@ -115,7 +115,21 @@ export const ServiceMapCard = observer(function ServiceMapCard(props: Props) {
 
         {accessPoints.length > 0 && <div className={css.accessPoints}>{accessPoints}</div>}
 
-        {props.isClusterMeshed && props.card.clusterName && (
+        {props.isClusterMeshed && props.card.meshClusters != null && (
+          <div className={css.clusterNameLabel}>
+            <Tooltip content={`Clusters: ${props.card.meshClusters.join(', ')}`}>
+              <span>
+                {props.card.meshClusters.map(cluster => (
+                  <span key={cluster} className={css.clusterNameBadge}>
+                    {cluster}
+                  </span>
+                ))}
+              </span>
+            </Tooltip>
+          </div>
+        )}
+
+        {props.isClusterMeshed && props.card.meshClusters == null && props.card.clusterName && (
           <div className={css.clusterNameLabel}>
             <Tooltip content={`Cluster name: ${props.card.clusterName}`}>
               {props.card.clusterName}

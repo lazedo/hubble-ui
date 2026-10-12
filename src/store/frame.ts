@@ -82,6 +82,15 @@ export class StoreFrame extends EventEmitter<Handlers> {
     return this.services.byId(id);
   }
 
+  // NOTE: Only the frame the map renders merges clusters: its stores read the
+  // NOTE: "merge clusters" control (ServiceStore.viewCardsList and
+  // NOTE: InteractionStore.viewConnections); the global frame never does.
+  @action.bound
+  public enableMeshMergeView() {
+    this.services.setViewControls(this.controls);
+    this.interactions.setViewServices(this.services);
+  }
+
   public onFlushed(fn: Handlers[EventKind.Flushed]): this {
     this.on(EventKind.Flushed, fn);
     return this;

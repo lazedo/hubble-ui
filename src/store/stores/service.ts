@@ -2,6 +2,7 @@ import _ from 'lodash';
 import { makeAutoObservable } from 'mobx';
 
 import { Link, ServiceCard, ServiceMap } from '~/domain/service-map';
+import { MeshMerge, mergeMeshCards } from '~/domain/service-map/mesh-merge';
 import { HubbleLink, HubbleService, Workload } from '~/domain/hubble';
 import { ServiceEndpoint } from '~/domain/interactions/endpoints';
 import { StateChange } from '~/domain/misc';
@@ -10,11 +11,16 @@ import { FilterEntry } from '~/domain/filtering/filter-entry';
 
 export type ClearOptions = {};
 
+// NOTE: Where the rendered frame reads the "merge clusters" control from
+export type MeshMergeControl = { mergeClusters: boolean };
+
 export class ServiceStore {
   private cards: ServiceCard[];
+  private viewControls: MeshMergeControl | null;
 
   constructor() {
     this.cards = [];
+    this.viewControls = null;
 
     makeAutoObservable(this, void 0, {
       autoBind: true,
@@ -37,6 +43,38 @@ export class ServiceStore {
     const map = new Map<string, ServiceCard>();
     this.cardsList.forEach(card => map.set(card.service.id, card));
     return map;
+  }
+
+  // NOTE: The cards as the map shows them: with "merge clusters" on, the same
+  // NOTE: workload of several clusters is one card (mesh-merge.ts). Everything
+  // NOTE: that updates cards keeps using cardsList/cardsMap: the stored cards
+  // NOTE: are never merged, only this view of them.
+  public setViewControls(controls: MeshMergeControl | null) {
+    this.viewControls = controls;
+  }
+
+  public get meshMergeView(): MeshMerge {
+    if (!this.viewControls?.mergeClusters) return { cards: this.cards, idRemap: new Map() };
+
+    return mergeMeshCards(this.cards);
+  }
+
+  public get viewCardsList(): ServiceCard[] {
+    return this.meshMergeView.cards;
+  }
+
+  public get viewCardsMap(): Map<string, ServiceCard> {
+    const map = new Map<string, ServiceCard>();
+    this.viewCardsList.forEach(card => map.set(card.id, card));
+    return map;
+  }
+
+  public get viewById() {
+    return (id: string) => this.viewCardsMap.get(id);
+  }
+
+  public get viewIdRemap(): Map<string, string> {
+    return this.meshMergeView.idRemap;
   }
 
   // NOTE: Gives { identiy -> Card } map

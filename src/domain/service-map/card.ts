@@ -14,6 +14,14 @@ import * as dhelpers from '~/domain/helpers';
 import { MapUtils } from '~/utils/iter-tools/map';
 import { ApplicationKind } from './types';
 
+// NOTE: What a card that merges the same workload of several clusters of a
+// NOTE: mesh carries (see mesh-merge.ts): the clusters it was seen in and the
+// NOTE: access points of all of them.
+export type MeshMembers = {
+  clusters: string[];
+  accessPoints: ServiceEndpoint[];
+};
+
 // This entity maintains ONLY THE DATA of service card
 export class ServiceCard extends AbstractCard {
   public static readonly UNKNOWN_APPNAME = 'Unknown App';
@@ -31,13 +39,18 @@ export class ServiceCard extends AbstractCard {
 
   public service: HubbleService;
 
-  constructor(service: HubbleService) {
+  // NOTE: Set only on a merged card: one per cluster, sorted
+  public readonly meshClusters: string[] | null;
+
+  constructor(service: HubbleService, mesh?: MeshMembers) {
     super();
 
     this.service = service;
     this._labelsProps = null;
     this._accessPoints = new Map();
     this._identity = service.identity;
+    this.meshClusters = mesh?.clusters ?? null;
+    mesh?.accessPoints.forEach(ap => this._accessPoints.set(ap.id, ap));
 
     makeObservable(this);
   }
@@ -88,7 +101,8 @@ export class ServiceCard extends AbstractCard {
   }
 
   public clone(): ServiceCard {
-    const card = new ServiceCard(_.cloneDeep(this.service));
+    const mesh = this.meshClusters ? { clusters: this.meshClusters, accessPoints: [] } : void 0;
+    const card = new ServiceCard(_.cloneDeep(this.service), mesh);
 
     this._accessPoints.forEach(ap => {
       card.upsertAccessPoint(ap.clone());
@@ -126,12 +140,17 @@ export class ServiceCard extends AbstractCard {
   public get filterEntries(): FilterEntry[] {
     const result = [];
 
-    if (this.identity > 0) {
+    // NOTE: A merged card stands for one identity per cluster, so it is found
+    // NOTE: by its workload (which also matches the other clusters by their
+    // NOTE: name label), or by the app name label when no member has one.
+    if (this.identity > 0 && this.meshClusters == null) {
       result.push(FilterEntry.newIdentity(this.identity.toString()));
     }
 
     if (this.workload != null) {
       result.push(FilterEntry.newWorkload(this.workload));
+    } else if (this.meshClusters != null && this.appNameLabel != null) {
+      result.push(FilterEntry.newLabel(this.appNameLabel));
     }
 
     if (this.isDNS) {
@@ -192,6 +211,15 @@ export class ServiceCard extends AbstractCard {
 
   public get appLabel(): string | null {
     return this.labelsProps.appName || null;
+  }
+
+  // NOTE: The label ("key=value") the app name was taken from
+  public get appNameLabel(): string | null {
+    const appName = this.appLabel;
+    if (appName == null) return null;
+
+    const lbl = this.service.labels.find(kv => Labels.getAppNameFromLabel(kv) === appName);
+    return lbl != null ? `${lbl.key}=${lbl.value}` : null;
   }
 
   public get clusterName(): string | null {

@@ -203,7 +203,7 @@ export class ServiceMapPlacementStrategy extends PlacementStrategy {
     const index: Map<PlacementKind, Set<PlacementMeta>> = new Map();
     const currentNs = this.namespaces.current;
 
-    this.services.cardsList.forEach((card: ServiceCard) => {
+    this.services.viewCardsList.forEach((card: ServiceCard) => {
       const meta = this.getCardPlacementMeta(card, currentNs?.namespace || undefined);
       const kindSet = index.get(meta.kind) ?? new Set();
       const cards = kindSet.add(meta);
@@ -260,7 +260,7 @@ export class ServiceMapPlacementStrategy extends PlacementStrategy {
 
     // prettier-ignore
     senders != null && senders.forEach((_, senderId) => {
-      const sender = this.services.cardsMap.get(senderId);
+      const sender = this.services.viewCardsMap.get(senderId);
       if (sender == null) return;
 
       hasWorldAsSender = hasWorldAsSender || sender.isWorld;
@@ -269,7 +269,7 @@ export class ServiceMapPlacementStrategy extends PlacementStrategy {
 
     // prettier-ignore
     receivers != null && receivers.forEach((_, receiverId) => {
-      const receiver = this.services.cardsMap.get(receiverId);
+      const receiver = this.services.viewCardsMap.get(receiverId);
       if (receiver == null) return;
 
       hasWorldAsReceiver = hasWorldAsReceiver || receiver.isWorld;
@@ -502,6 +502,6 @@ export class ServiceMapPlacementStrategy extends PlacementStrategy {
 
   @computed
   get connections() {
-    return this.interactions.connections;
+    return this.interactions.viewConnections;
   }
 }

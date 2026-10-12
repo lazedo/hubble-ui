@@ -184,6 +184,12 @@ export const ServiceMapApp = observer(function ServiceMapApp() {
       onShowRemoteNodeToggle={() => ui.controls.toggleShowRemoteNode()}
       showPrometheusApp={store.controls.showPrometheusApp}
       onShowPrometheusAppToggle={() => ui.controls.toggleShowPrometheusApp()}
+      mergeClusters={store.controls.mergeClusters}
+      onMergeClustersToggle={
+        store.currentFrame.services.isClusterMeshed
+          ? () => ui.controls.toggleMergeClusters()
+          : void 0
+      }
     />
   );
 
@@ -204,14 +210,14 @@ export const ServiceMapApp = observer(function ServiceMapApp() {
       {RenderedTopBar}
 
       <div className={css.map}>
-        {store.currentFrame.services.cardsList.length > 0 ? (
+        {store.currentFrame.services.viewCardsList.length > 0 ? (
           <Map
             namespace={store.namespaces.current?.namespace}
             namespaceBBox={ui.serviceMap.placement.namespaceBBox}
             placement={ui.serviceMap.placement}
             arrows={ui.serviceMap.arrows}
             arrowsRenderer={ServiceMapArrowsRenderer}
-            cards={store.currentFrame.services.cardsList}
+            cards={store.currentFrame.services.viewCardsList}
             cardRenderer={cardRenderer}
             visibleHeight={mapVisibleHeight ?? 0}
             wasDragged={mapWasDragged}
