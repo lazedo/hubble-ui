@@ -30,6 +30,9 @@ export interface LabelsProps {
   appName?: string;
   clusterName?: string;
   cidrGroupIcon?: string;
+  // NOTE: The namespace a named CiliumCIDRGroup stands for (cidrgroup:namespace=<x>),
+  // NOTE: such as the one of a Service of another cluster
+  cidrGroupNamespace?: string;
 }
 
 export enum ReservedLabel {
@@ -457,8 +460,22 @@ export class Labels {
     // name — use it instead of the generic reserved-derived one, regardless
     // of the order the labels arrived in (cilium/hubble-ui#1051).
     if (props.isWorld) {
+      // NOTE: A group may carry a display name and the namespace it stands for
+      // NOTE: (cidrgroup:name=<x>, cidrgroup:namespace=<y>), such as the groups
+      // NOTE: published for the Services of another cluster: the name then
+      // NOTE: wins over the group name, which has to be unique.
       const cidrGroupName = Labels.findCIDRGroupNameInLabels(labels);
-      if (!!cidrGroupName) props.appName = cidrGroupName;
+      const displayName = labels.find(l => l.key.toLowerCase() === 'cidrgroup:name' && !!l.value);
+      if (!!displayName) {
+        props.appName = displayName.value;
+      } else if (!!cidrGroupName) {
+        props.appName = cidrGroupName;
+      }
+
+      const namespace = labels.find(
+        l => l.key.toLowerCase() === 'cidrgroup:namespace' && !!l.value,
+      );
+      if (!!namespace) props.cidrGroupNamespace = namespace.value;
 
       props.cidrGroupIcon = Labels.findCIDRGroupIconInLabels(labels) || void 0;
 

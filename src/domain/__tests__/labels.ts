@@ -73,6 +73,25 @@ describe('extract app name', () => {
     expect(Labels.detect(both).clusterName).toBe('west');
   });
 
+  test('a cidr group display name and namespace win over the group name', () => {
+    const labels = [
+      'reserved:world',
+      'cidrgroup:io.cilium.policy.cidrgroupname/couch-crdb-sink.call-trace.mgmt',
+      'cidrgroup:name=couch-crdb-sink',
+      'cidrgroup:namespace=call-trace',
+      'cidrgroup:site=mgmt',
+    ].map(l => Labels.toKV(l));
+    const props = Labels.detect(labels);
+
+    expect(props.appName).toBe('couch-crdb-sink');
+    expect(props.cidrGroupNamespace).toBe('call-trace');
+    expect(props.clusterName).toBe('mgmt');
+
+    // NOTE: without them, the group name stays the title
+    const plain = ['reserved:world', 'cidrgroup:io.cilium.policy.cidrgroupname/klab-dns-west'];
+    expect(Labels.detect(plain.map(l => Labels.toKV(l))).appName).toBe('klab-dns-west');
+  });
+
   test('from k8s prefixed lbls', () => {
     appNameTest(['k8s:app=EXPECTED_NAME'], 'EXPECTED_NAME');
     appNameTest(['k8s:name=EXPECTED_NAME'], 'EXPECTED_NAME');

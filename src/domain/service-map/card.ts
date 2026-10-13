@@ -252,6 +252,12 @@ export class ServiceCard extends AbstractCard {
     return this.labelsProps.cidrGroupIcon || null;
   }
 
+  // NOTE: Shown under the title only: the card stays out of that namespace
+  @computed
+  public get cidrGroupNamespace(): string | null {
+    return this.labelsProps.cidrGroupNamespace || null;
+  }
+
   public get appName(): string {
     const appLabel = this.appLabel;
     if (appLabel != null) return appLabel;
