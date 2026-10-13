@@ -92,6 +92,23 @@ describe('extract app name', () => {
     expect(Labels.detect(plain.map(l => Labels.toKV(l))).appName).toBe('klab-dns-west');
   });
 
+  test('part-of and component come from the k8s recommended labels only', () => {
+    const amqp = [
+      'k8s:app.kubernetes.io/name=amqp',
+      'k8s:app.kubernetes.io/part-of=rabbitmq',
+      'k8s:app.kubernetes.io/component=rabbitmq',
+    ].map(l => Labels.toKV(l));
+    const props = Labels.detect(amqp);
+
+    expect(props.appName).toBe('amqp');
+    expect(props.partOf).toBe('rabbitmq');
+    expect(props.component).toBe('rabbitmq');
+
+    // NOTE: a cidr group label of the same name is not the workload's
+    const group = Labels.detect(['reserved:world', 'cidrgroup:part-of=x'].map(l => Labels.toKV(l)));
+    expect(group.partOf).toBeUndefined();
+  });
+
   test('from k8s prefixed lbls', () => {
     appNameTest(['k8s:app=EXPECTED_NAME'], 'EXPECTED_NAME');
     appNameTest(['k8s:name=EXPECTED_NAME'], 'EXPECTED_NAME');

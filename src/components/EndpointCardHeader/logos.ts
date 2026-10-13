@@ -24,3 +24,9 @@ export const grafana = 'icons/logos/grafana-logo.svg';
 export const loki = 'icons/logos/loki-logo.svg';
 export const tempo = 'icons/logos/tempo-logo.svg';
 export const mimir = 'icons/logos/mimir-logo.svg';
+export const erlang = 'icons/logos/erlang-logo.svg';
+export const kamailio = 'icons/logos/kamailio-logo.svg';
+export const freeswitch = 'icons/logos/freeswitch-logo.svg';
+export const cockroachdb = 'icons/logos/cockroachdb-logo.svg';
+// NOTE: The call trace's sink (app couch-crdb-sink): couchdb ⇄ cockroachdb
+export const couchCrdbSink = 'icons/logos/couch-crdb-sink-logo.svg';

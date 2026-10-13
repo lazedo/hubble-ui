@@ -258,6 +258,16 @@ export class ServiceCard extends AbstractCard {
     return this.labelsProps.cidrGroupNamespace || null;
   }
 
+  // NOTE: The names the card's logo may come from, in order: its app name,
+  // NOTE: then its part-of and component labels (an operator sets them: the
+  // NOTE: RabbitMQ cluster is part-of rabbitmq, the kazoo apps are erlang
+  // NOTE: components)
+  @computed
+  public get logoCandidates(): string[] {
+    const { partOf, component } = this.labelsProps;
+    return [this.appLabel, partOf, component].filter((c): c is string => !!c);
+  }
+
   public get appName(): string {
     const appLabel = this.appLabel;
     if (appLabel != null) return appLabel;

@@ -33,6 +33,10 @@ export interface LabelsProps {
   // NOTE: The namespace a named CiliumCIDRGroup stands for (cidrgroup:namespace=<x>),
   // NOTE: such as the one of a Service of another cluster
   cidrGroupNamespace?: string;
+  // NOTE: The k8s recommended app.kubernetes.io/part-of and component labels,
+  // NOTE: where a card's logo comes from when its app name has none
+  partOf?: string;
+  component?: string;
 }
 
 export enum ReservedLabel {
@@ -449,6 +453,10 @@ export class Labels {
       if (!props.clusterName) {
         props.clusterName = Labels.isClusterNameLabel(kv, false) ? kv.value : void 0;
       }
+
+      // NOTE: k8s:app.kubernetes.io/part-of and .../component, without prefixes
+      if (!props.partOf && kv.key === 'part-of' && !!kv.value) props.partOf = kv.value;
+      if (!props.component && kv.key === 'component' && !!kv.value) props.component = kv.value;
     });
 
     // NOTE: Now lets use smth more aggressive
