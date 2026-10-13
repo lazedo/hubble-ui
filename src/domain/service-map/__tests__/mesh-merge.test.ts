@@ -80,6 +80,16 @@ describe('merging cards across a cluster mesh', () => {
     expect(amqp.meshClusters).toBeNull();
   });
 
+  test('the merged card keeps only the labels all members share', () => {
+    expect(api.service.labels).toEqual([
+      { key: 'k8s:app.kubernetes.io/name', value: 'api' },
+      { key: 'k8s:io.kubernetes.pod.namespace', value: 'kazoo' },
+    ]);
+    // NOTE: the clusters are on the badges
+    expect(api.clusterName).toBeNull();
+    expect(api.meshClusters).toEqual(['central', 'east', 'west']);
+  });
+
   test('the merged card has the access points of all members', () => {
     expect([...api.accessPoints.keys()]).toEqual([ServiceEndpoint.generateId(api.id, 8000)]);
   });
@@ -131,5 +141,26 @@ describe('merging cards across a cluster mesh', () => {
     expect(store.viewCardsList).toHaveLength(2);
     expect(store.viewById('mesh/kazoo/api')?.meshClusters).toEqual(['central', 'east', 'west']);
     expect(store.cardsList).toHaveLength(4);
+  });
+
+  test('until the user picks it, the store merges as soon as it is cluster-meshed', () => {
+    const meshed = new ServiceStore();
+    meshed.set([west.service, east.service, central.service, amqp.service]);
+    // NOTE: a frame which is not rendered never merges
+    expect(meshed.isMeshMerged).toBe(false);
+
+    meshed.setViewControls({ mergeClusters: null });
+    expect(meshed.isMeshMerged).toBe(true);
+    expect(meshed.viewCardsList).toHaveLength(2);
+
+    // NOTE: the pick of the user is kept, also when it turns merging off
+    meshed.setViewControls({ mergeClusters: false });
+    expect(meshed.isMeshMerged).toBe(false);
+    expect(meshed.viewCardsList).toHaveLength(4);
+
+    const single = new ServiceStore();
+    single.set([west.service, amqp.service]);
+    single.setViewControls({ mergeClusters: null });
+    expect(single.isMeshMerged).toBe(false);
   });
 });

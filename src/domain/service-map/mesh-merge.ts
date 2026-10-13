@@ -52,6 +52,7 @@ export const mergeMeshCards = (cards: ServiceCard[]): MeshMerge => {
     const service: HubbleService = {
       ...members[0].service,
       id: key,
+      labels: commonLabels(members),
       workloads: uniqueWorkloads(members),
     };
     const clusters = [...new Set(members.map(m => m.clusterName!))];
@@ -90,6 +91,16 @@ export const remapLinks = (links: Link[], idRemap: Map<string, string>): Link[] 
   });
 
   return [...result.values()];
+};
+
+// NOTE: The labels all the members share: the ones that tell them apart, such
+// NOTE: as their cluster or zone, are on the badges of the merged card.
+const commonLabels = (members: ServiceCard[]): HubbleService['labels'] => {
+  const [first, ...rest] = members;
+
+  return first.service.labels.filter(l =>
+    rest.every(m => m.service.labels.some(o => o.key === l.key && o.value === l.value)),
+  );
 };
 
 const uniqueWorkloads = (members: ServiceCard[]): Workload[] => {

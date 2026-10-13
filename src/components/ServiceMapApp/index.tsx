@@ -190,7 +190,7 @@ export const ServiceMapApp = observer(function ServiceMapApp() {
       onShowRemoteNodeToggle={() => ui.controls.toggleShowRemoteNode()}
       showPrometheusApp={store.controls.showPrometheusApp}
       onShowPrometheusAppToggle={() => ui.controls.toggleShowPrometheusApp()}
-      mergeClusters={store.controls.mergeClusters}
+      mergeClusters={store.currentFrame.services.isMeshMerged}
       onMergeClustersToggle={
         store.currentFrame.services.isClusterMeshed
           ? () => ui.controls.toggleMergeClusters()

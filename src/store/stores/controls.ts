@@ -21,8 +21,10 @@ export class ControlStore {
   public showKubeDns = false;
   public showRemoteNode = false;
   public showPrometheusApp = false;
-  // NOTE: One card per workload across the clusters of a mesh (view only)
-  public mergeClusters = false;
+  // NOTE: One card per workload across the clusters of a mesh (view only).
+  // NOTE: null until the user picks it: the map then merges as soon as it is
+  // NOTE: cluster-meshed (ServiceStore.isMeshMerged).
+  public mergeClusters: boolean | null = null;
 
   constructor() {
     makeAutoObservable(this, void 0, {
@@ -142,14 +144,10 @@ export class ControlStore {
     return this.setShowPrometheusApp(!this.showPrometheusApp);
   }
 
-  setMergeClusters(val: boolean): boolean {
+  setMergeClusters(val: boolean | null): boolean | null {
     this.mergeClusters = val;
 
     return val;
-  }
-
-  toggleMergeClusters(): boolean {
-    return this.setMergeClusters(!this.mergeClusters);
   }
 
   setFilters(f: Filters) {

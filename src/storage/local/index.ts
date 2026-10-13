@@ -144,8 +144,14 @@ export function saveShowPrometheusApp(val: boolean) {
   localStorage.setItem(SHOW_PROMETHEUS_SERVICE_KEY, val ? 'true' : 'false');
 }
 
-export function getMergeClusters(): boolean {
-  return localStorage.getItem(MERGE_CLUSTERS_KEY) === 'true';
+// NOTE: null until the user picks it: the map then merges as soon as it sees
+// NOTE: several clusters
+export function getMergeClusters(): boolean | null {
+  const val = localStorage.getItem(MERGE_CLUSTERS_KEY);
+  if (val === 'true') return true;
+  if (val === 'false') return false;
+
+  return null;
 }
 
 export function saveMergeClusters(val: boolean) {

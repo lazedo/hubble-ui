@@ -11,8 +11,9 @@ import { FilterEntry } from '~/domain/filtering/filter-entry';
 
 export type ClearOptions = {};
 
-// NOTE: Where the rendered frame reads the "merge clusters" control from
-export type MeshMergeControl = { mergeClusters: boolean };
+// NOTE: Where the rendered frame reads the "merge clusters" control from;
+// NOTE: null while the user has not picked it
+export type MeshMergeControl = { mergeClusters: boolean | null };
 
 export class ServiceStore {
   private cards: ServiceCard[];
@@ -53,8 +54,16 @@ export class ServiceStore {
     this.viewControls = controls;
   }
 
+  // NOTE: Whether the map merges the clusters: as the user picked it or, until
+  // NOTE: then, as soon as it is cluster-meshed. Only the rendered frame merges.
+  public get isMeshMerged(): boolean {
+    if (this.viewControls == null) return false;
+
+    return this.viewControls.mergeClusters ?? this.isClusterMeshed;
+  }
+
   public get meshMergeView(): MeshMerge {
-    if (!this.viewControls?.mergeClusters) return { cards: this.cards, idRemap: new Map() };
+    if (!this.isMeshMerged) return { cards: this.cards, idRemap: new Map() };
 
     return mergeMeshCards(this.cards);
   }

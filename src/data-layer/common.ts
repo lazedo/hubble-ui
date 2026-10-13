@@ -12,7 +12,7 @@ export type Options = {
 export type StorageParameters = {
   isHostShown: boolean;
   isKubeDNSShown: boolean;
-  isMergeClusters: boolean;
+  isMergeClusters: boolean | null;
   isAggregationOff: boolean | null;
   dataMode: DataMode | null;
 };

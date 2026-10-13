@@ -129,9 +129,11 @@ export class Controls extends EventEmitter<Handlers> {
     this.emit(Event.ShowPrometheusAppChanged, Diff.new(!isActive).step(isActive));
   }
 
-  // NOTE: View only (the rendered frame merges its cards): nothing to refetch
+  // NOTE: View only (the rendered frame merges its cards): nothing to refetch.
+  // NOTE: Flips what the map shows, possibly the default, and keeps the pick.
   public toggleMergeClusters() {
-    const isActive = this.store.controls.toggleMergeClusters();
+    const isActive = !this.store.currentFrame.services.isMeshMerged;
+    this.store.controls.setMergeClusters(isActive);
     storage.saveMergeClusters(isActive);
   }
 
