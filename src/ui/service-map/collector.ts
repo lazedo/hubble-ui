@@ -148,7 +148,9 @@ export class RefsCollector extends EventEmitter<Handlers> {
 
       cardCoordsPromises.push(p);
 
-      const svc = this.frame.services.cardsMap.get(cardId);
+      // NOTE: The rendered cards are the view ones: with "merge clusters" on,
+      // NOTE: a merged card is not among the stored cards.
+      const svc = this.frame.services.viewCardsMap.get(cardId);
       if (svc == null) {
         console.warn(`cannot find svc for card ${cardId}`);
         return;
