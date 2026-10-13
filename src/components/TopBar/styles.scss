@@ -7,6 +7,7 @@
   top: 0;
 
   width: calc(100% - 32px);
+
   // NOTE: Grows down with the filter box when its tags wrap: a fixed height
   // NOTE: kept the box centered and pushed its first rows above the page.
   min-height: var(--top-bar-height);
