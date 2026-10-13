@@ -25,12 +25,17 @@ export const meshMergeKey = (card: ServiceCard): string | null => {
   return `mesh/${card.namespace}/${card.appLabel}`;
 };
 
-export const mergeMeshCards = (cards: ServiceCard[]): MeshMerge => {
+// NOTE: The pinned identities are the ones a filter picks out: their cards
+// NOTE: stay on their own, as merging them would hide their cluster.
+export const mergeMeshCards = (
+  cards: ServiceCard[],
+  pinned: Set<number> = new Set(),
+): MeshMerge => {
   const result: MeshMerge = { cards: [], idRemap: new Map() };
   const groups = new Map<string, ServiceCard[]>();
 
   cards.forEach(card => {
-    const key = meshMergeKey(card);
+    const key = pinned.has(card.identity) ? null : meshMergeKey(card);
     if (key == null) {
       result.cards.push(card);
       return;

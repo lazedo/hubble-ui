@@ -11,9 +11,10 @@ import { FilterEntry } from '~/domain/filtering/filter-entry';
 
 export type ClearOptions = {};
 
-// NOTE: Where the rendered frame reads the "merge clusters" control from;
-// NOTE: null while the user has not picked it
-export type MeshMergeControl = { mergeClusters: boolean | null };
+// NOTE: Where the rendered frame reads the "merge clusters" control from
+// NOTE: (null while the user has not picked it) and the filters which pick
+// NOTE: identities out
+export type MeshMergeControl = { mergeClusters: boolean | null; flowFilters?: FilterEntry[] };
 
 export class ServiceStore {
   private cards: ServiceCard[];
@@ -62,10 +63,23 @@ export class ServiceStore {
     return this.viewControls.mergeClusters ?? this.isClusterMeshed;
   }
 
+  // NOTE: The identities the filters pick out keep their own cards
+  public get pinnedIdentities(): Set<number> {
+    const pinned = new Set<number>();
+    this.viewControls?.flowFilters?.forEach(fe => {
+      if (!fe.isIdentity || fe.negative) return;
+
+      const identity = Number(fe.query);
+      if (!Number.isNaN(identity)) pinned.add(identity);
+    });
+
+    return pinned;
+  }
+
   public get meshMergeView(): MeshMerge {
     if (!this.isMeshMerged) return { cards: this.cards, idRemap: new Map() };
 
-    return mergeMeshCards(this.cards);
+    return mergeMeshCards(this.cards, this.pinnedIdentities);
   }
 
   public get viewCardsList(): ServiceCard[] {

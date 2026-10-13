@@ -2,6 +2,7 @@ import { HubbleLink, HubbleService, IPProtocol, Verdict } from '~/domain/hubble'
 import { Link, ServiceCard } from '~/domain/service-map';
 import { mergeMeshCards, remapLinks } from '~/domain/service-map/mesh-merge';
 import { ServiceEndpoint } from '~/domain/interactions/endpoints';
+import { FilterEntry } from '~/domain/filtering/filter-entry';
 import { ServiceStore } from '~/store/stores/service';
 
 import { services } from '~/testing/data';
@@ -162,5 +163,31 @@ describe('merging cards across a cluster mesh', () => {
     single.set([west.service, amqp.service]);
     single.setViewControls({ mergeClusters: null });
     expect(single.isMeshMerged).toBe(false);
+  });
+
+  test('an identity a filter picks out keeps its own card', () => {
+    const pinned = mergeMeshCards([west, east, central, amqp], new Set([east.identity]));
+
+    expect(pinned.cards.map(c => c.id).sort()).toEqual(['2', '9', 'mesh/kazoo/api']);
+    expect(pinned.idRemap.has('2')).toBe(false);
+    expect(pinned.cards.find(c => c.id === 'mesh/kazoo/api')?.meshClusters).toEqual([
+      'central',
+      'west',
+    ]);
+  });
+
+  test('the store pins the identities of the identity filters, not the negative ones', () => {
+    const store = new ServiceStore();
+    store.set([west.service, east.service, central.service, amqp.service]);
+
+    store.setViewControls({ mergeClusters: true, flowFilters: [FilterEntry.newIdentity('2')] });
+    expect(store.viewById('2')?.clusterName).toBe('east');
+    expect(store.viewById('mesh/kazoo/api')?.meshClusters).toEqual(['central', 'west']);
+
+    const negative = FilterEntry.newIdentity('2');
+    negative.negative = true;
+    store.setViewControls({ mergeClusters: true, flowFilters: [negative] });
+    expect(store.viewById('2')).toBeUndefined();
+    expect(store.viewById('mesh/kazoo/api')?.meshClusters).toEqual(['central', 'east', 'west']);
   });
 });
