@@ -7,6 +7,8 @@ import { XY } from '~/domain/geometry';
 
 import { MapUtils } from '~/utils/iter-tools/map';
 import { AccessPointArrow } from '~/ui-layer/service-map/coordinates/arrow';
+import { ServiceMapArrowStrategy } from '~/ui-layer/service-map/coordinates/arrows';
+import { ArrowsHighlight, isHighlightActive } from '~/ui-layer/service-map/coordinates/hover';
 import { sizes } from '~/ui';
 import { colors } from '~/ui/vars';
 
@@ -21,15 +23,30 @@ import css from './styles.scss';
 export type Props = Omit<ArrowRendererProps, 'arrow'> & {
   arrows: Map<string, AccessPointArrow>;
   connectorId: string;
+  strategy: ServiceMapArrowStrategy;
 };
 
 export const ServiceMapArrowDuckFeet = observer(function ServiceMapArrowDuckFeet(props: Props) {
+  // NOTE: Read while rendering, so that a hover re-renders the small arrows
+  const highlight = props.strategy.highlight;
+
   const connectorCapRef = reactionRef<SVGGElement | null>(null, e => {
     renderEndingConnectorCap(e, props.connectorId, props.arrows);
   });
   const innerArrowsRef = reactionRef<SVGGElement | null>(null, e => {
     renderInnerArrows(e, props.arrows);
+    markInnerArrows(e, highlight);
   });
+
+  // NOTE: Only the small arrows of the lit paths: a connector may also lead
+  // NOTE: to access points another hovered path does not reach
+  const markInnerArrows = useCallback((target: SVGGElement | null, hl: ArrowsHighlight) => {
+    if (target == null) return;
+
+    d3.select(target)
+      .selectAll<SVGLineElement, AccessPointArrow>('line.inner')
+      .classed(css.apArrowHighlighted, d => hl.apArrows.has(d.id));
+  }, []);
 
   const renderEndingConnectorCap = useCallback(
     (target: SVGGElement | null, connectorId: string, arrows: Map<string, AccessPointArrow>) => {
@@ -155,13 +172,22 @@ export const ServiceMapArrowDuckFeet = observer(function ServiceMapArrowDuckFeet
     [],
   );
 
-  const classes = classnames('arrow-duckfeet', props.connectorId);
+  const isLit = highlight.connectors.has(props.connectorId);
+  const classes = classnames('arrow-duckfeet', props.connectorId, {
+    [css.connectorHighlighted]: isLit,
+    [css.dimmed]: isHighlightActive(highlight) && !isLit,
+  });
 
   return (
     <Teleport to={props.arrowsForeground}>
       <g className={classes}>
         <g className="arrows-to-access-points" ref={innerArrowsRef}></g>
-        <g className="connector-cap" ref={connectorCapRef}></g>
+        <g
+          className="connector-cap"
+          ref={connectorCapRef}
+          onMouseEnter={() => props.strategy.setHover({ kind: 'connector', id: props.connectorId })}
+          onMouseLeave={() => props.strategy.setHover(null)}
+        ></g>
       </g>
     </Teleport>
   );

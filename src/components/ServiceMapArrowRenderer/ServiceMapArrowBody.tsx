@@ -7,12 +7,16 @@ import { XY } from '~/domain/geometry';
 
 import { ArrowRendererProps } from '~/components/ArrowsRenderer';
 import { ServiceMapArrow } from '~/ui-layer/service-map/coordinates/arrow';
+import { ServiceMapArrowStrategy } from '~/ui-layer/service-map/coordinates/arrows';
+import { isHighlightActive } from '~/ui-layer/service-map/coordinates/hover';
 import { colors, sizes } from '~/ui/vars';
 
 import * as helpers from './helpers';
 import css from './styles.scss';
 
-export type Props = ArrowRendererProps & {};
+export type Props = ArrowRendererProps & {
+  strategy: ServiceMapArrowStrategy;
+};
 
 export const ServiceMapArrowBody = observer(function ServiceMapArrowBody(props: Props) {
   const trajectoryGroup = useRef<SVGGElement | null>(null);
@@ -25,7 +29,7 @@ export const ServiceMapArrowBody = observer(function ServiceMapArrowBody(props: 
     // NOTE: an access to enter/update sets (see d3 General Update Pattern).
     const path = d3
       .select(trajectoryGroup.current!)
-      .selectAll<SVGPathElement, ServiceMapArrow>('path')
+      .selectAll<SVGPathElement, ServiceMapArrow>('path.line')
       .data([arrow], d => d.id);
 
     // NOTE: d3 Update set is handled here
@@ -41,6 +45,24 @@ export const ServiceMapArrowBody = observer(function ServiceMapArrowBody(props: 
       .attr('d', d => helpers.svg.arrowLinePath(d.points));
 
     path.exit().remove();
+
+    // NOTE: A wide transparent copy of the line, so that the pointer does not
+    // NOTE: need to hit the thin line itself to light up the path
+    const hit = d3
+      .select(trajectoryGroup.current!)
+      .selectAll<SVGPathElement, ServiceMapArrow>('path.hit')
+      .data([arrow], d => d.id);
+
+    hit.attr('d', d => helpers.svg.arrowLinePath(d.points));
+
+    hit
+      .enter()
+      .append('path')
+      .attr('class', 'hit ' + css.arrowHit)
+      .attr('fill', 'none')
+      .attr('d', d => helpers.svg.arrowLinePath(d.points));
+
+    hit.exit().remove();
   }, []);
 
   // TODO: Maybe it's worth to find a way not to render arrow handles right
@@ -101,10 +123,19 @@ export const ServiceMapArrowBody = observer(function ServiceMapArrowBody(props: 
     renderStartPlate(props.arrow);
   }, [props]);
 
-  const classes = classnames('arrow-body', props.arrow.id);
+  const highlight = props.strategy.highlight;
+  const isLit = highlight.arrows.has(props.arrow.id);
+  const classes = classnames('arrow-body', props.arrow.id, {
+    [css.highlighted]: isLit,
+    [css.dimmed]: isHighlightActive(highlight) && !isLit,
+  });
 
   return (
-    <g className={classes}>
+    <g
+      className={classes}
+      onMouseEnter={() => props.strategy.setHover({ kind: 'arrow', id: props.arrow.id })}
+      onMouseLeave={() => props.strategy.setHover(null)}
+    >
       <g className="trajectory" ref={trajectoryGroup}></g>
       <g className="triangle-handles" ref={handlesGroup}></g>
       <g className="arrows-to-access-points" ref={innerArrows}></g>

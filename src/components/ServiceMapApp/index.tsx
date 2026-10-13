@@ -154,6 +154,7 @@ export const ServiceMapApp = observer(function ServiceMapApp() {
         l7endpoints={l7endpoints.forReceiver(props.card.id)}
         maxHttpEndpointsVisible={5}
         isClusterMeshed={store.currentFrame.services.isClusterMeshed}
+        arrows={ui.serviceMap.arrows}
         onHeaderClick={onCardSelect}
       />
     );

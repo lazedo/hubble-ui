@@ -53,3 +53,10 @@ $dot-size: 10px;
     }
   }
 }
+
+// NOTE: An access point lit up by a hover on a path that reaches it
+.accessPoint.highlighted {
+  border-radius: 4px;
+  background: rgb(1 164 255 / 12%);
+  box-shadow: 0 0 0 2px #01a4ff;
+}

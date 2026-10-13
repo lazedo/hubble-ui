@@ -14,6 +14,7 @@ import { ControlStore } from '~/store/stores/controls';
 import { ServiceMapPlacementStrategy } from './placement';
 import { AccessPointArrow, ServiceMapArrow } from './arrow';
 import { ConnectorCoordsAccumulator, createCardOffsetAdvancers } from './helpers';
+import { ArrowsHighlight, ArrowsHoverTarget, computeHighlight } from './hover';
 
 export type CombinedAccessPointArrows = Map<string, Map<string, AccessPointArrow>>;
 
@@ -36,6 +37,10 @@ export class ServiceMapArrowStrategy extends ArrowStrategy {
   @observable
   private _combinedAccessPointArrows: CombinedAccessPointArrows = new Map();
 
+  // NOTE: What the pointer is over: the paths through it are lit up
+  @observable
+  private _hover: ArrowsHoverTarget | null = null;
+
   constructor(frame: StoreFrame, placement: ServiceMapPlacementStrategy) {
     super();
     makeObservable(this);
@@ -49,6 +54,16 @@ export class ServiceMapArrowStrategy extends ArrowStrategy {
   @action.bound
   public rebuild() {
     this.rebuildArrows();
+  }
+
+  @action.bound
+  public setHover(target: ArrowsHoverTarget | null) {
+    this._hover = target;
+  }
+
+  @computed
+  public get highlight(): ArrowsHighlight {
+    return computeHighlight(this._arrows as Map<string, ServiceMapArrow>, this._hover);
   }
 
   @action.bound

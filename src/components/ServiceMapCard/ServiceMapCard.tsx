@@ -19,6 +19,7 @@ import { HttpEndpoint } from './HttpEndpoint';
 import { HTTPEndpointGroup } from './http-groups';
 
 import { RefsCollector } from '~/ui/service-map/collector';
+import { ServiceMapArrowStrategy } from '~/ui-layer/service-map/coordinates/arrows';
 import * as lang from '~/utils/lang';
 import css from './styles.scss';
 
@@ -32,6 +33,9 @@ export type Props = CardProps<ServiceCard> & {
   active?: boolean;
   showAdditionalInfo?: boolean;
   onGotoProcessTree?: (card: ServiceCard) => void;
+  // NOTE: The arrows of the map: a hover on an access point lights up the
+  // NOTE: paths that reach it, and a lit path lights up its access points
+  arrows?: ServiceMapArrowStrategy;
 };
 
 export const ServiceMapCard = observer(function ServiceMapCard(props: Props) {
@@ -54,6 +58,10 @@ export const ServiceMapCard = observer(function ServiceMapCard(props: Props) {
               l4Protocol={ap.l4Protocol}
               l7Protocol={ap.l7Protocol ?? void 0}
               connectorRef={props.collector.accessPointConnector(ap.id)}
+              highlighted={props.arrows?.highlight.accessPoints.has(ap.id)}
+              onHoverChange={hovered =>
+                props.arrows?.setHover(hovered ? { kind: 'accessPoint', id: ap.id } : null)
+              }
             />
 
             {groups.length > 0 && props.active && (

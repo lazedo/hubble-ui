@@ -29,6 +29,7 @@ const ServiceMapArrows = observer(function ServiceMapArrows(props: Props) {
             <ServiceMapArrowBody
               key={arrowId}
               arrow={arrow}
+              strategy={props.strategy}
               overlay={props.overlay}
               arrowsForeground={props.arrowsForeground}
             />
@@ -43,6 +44,7 @@ const ServiceMapArrows = observer(function ServiceMapArrows(props: Props) {
                 key={connectorId}
                 connectorId={connectorId}
                 arrows={combinedArrows}
+                strategy={props.strategy}
                 arrowsForeground={props.arrowsForeground}
                 overlay={props.overlay}
               />

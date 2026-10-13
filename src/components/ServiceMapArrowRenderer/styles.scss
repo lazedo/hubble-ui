@@ -23,3 +23,45 @@ $hovered-control: #01a4ff;
 .arrowHandle {
   fill: var(--hubble-ui-svcmap-arrow-handle);
 }
+
+// NOTE: The transparent copy of an arrow line which catches the pointer
+.arrowHit {
+  stroke: transparent;
+  stroke-width: 14px;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+// NOTE: A path lit up by a hover; the other paths are dimmed meanwhile
+.highlighted {
+  :global(path.line) {
+    stroke: $hovered-control;
+    stroke-width: 3px;
+  }
+
+  .arrowHandle {
+    fill: $hovered-control;
+  }
+
+  :global(path.start-plate) {
+    fill: $hovered-control;
+    stroke: $hovered-control;
+  }
+}
+
+.connectorHighlighted :global(circle.ending-connector) {
+  stroke: $hovered-control;
+}
+
+.apArrowHighlighted {
+  stroke: $hovered-control;
+  stroke-width: 3px;
+}
+
+.dimmed {
+  opacity: 0.25;
+}
+
+:global(.connector-cap) {
+  cursor: pointer;
+}

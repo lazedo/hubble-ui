@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef } from 'react';
 import { observer } from 'mobx-react';
+import classnames from 'classnames';
 
 import { IPProtocol, L7Kind, Verdict } from '~/domain/hubble';
 import * as l7helpers from '~/domain/helpers/l7';
@@ -12,6 +13,9 @@ export interface Props {
   l7Protocol?: L7Kind;
   verdicts?: Set<Verdict>;
   connectorRef?: React.MutableRefObject<HTMLDivElement | null>;
+  // NOTE: Lit up along with the paths that reach it
+  highlighted?: boolean;
+  onHoverChange?: (hovered: boolean) => void;
 }
 
 export const AccessPoint = observer(function AccessPoint(props: Props) {
@@ -27,7 +31,11 @@ export const AccessPoint = observer(function AccessPoint(props: Props) {
   }, [props.connectorRef]);
 
   return (
-    <div className={css.accessPoint}>
+    <div
+      className={classnames(css.accessPoint, { [css.highlighted]: props.highlighted })}
+      onMouseEnter={() => props.onHoverChange?.(true)}
+      onMouseLeave={() => props.onHoverChange?.(false)}
+    >
       <div className={css.icons}>
         <div className={css.circle} ref={connectorRef}>
           <img src="icons/misc/access-point.svg" />
